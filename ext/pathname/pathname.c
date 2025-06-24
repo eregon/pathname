@@ -1,42 +1,11 @@
 #include "ruby.h"
 
-static VALUE rb_cPathname;
-static ID id_at_path;
-
 static VALUE
-get_strpath(VALUE obj)
+fast_path_cmp(VALUE self, VALUE s1, VALUE s2)
 {
-    VALUE strpath;
-    strpath = rb_ivar_get(obj, id_at_path);
-    if (!RB_TYPE_P(strpath, T_STRING))
-        rb_raise(rb_eTypeError, "unexpected @path");
-    return strpath;
-}
-
-/*
- *  Provides a case-sensitive comparison operator for pathnames.
- *
- *	Pathname.new('/usr') <=> Pathname.new('/usr/bin')
- *	    #=> -1
- *	Pathname.new('/usr/bin') <=> Pathname.new('/usr/bin')
- *	    #=> 0
- *	Pathname.new('/usr/bin') <=> Pathname.new('/USR/BIN')
- *	    #=> 1
- *
- *  It will return +-1+, +0+ or +1+ depending on the value of the left argument
- *  relative to the right argument. Or it will return +nil+ if the arguments
- *  are not comparable.
- */
-static VALUE
-path_cmp(VALUE self, VALUE other)
-{
-    VALUE s1, s2;
     char *p1, *p2;
     char *e1, *e2;
-    if (!rb_obj_is_kind_of(other, rb_cPathname))
-        return Qnil;
-    s1 = get_strpath(self);
-    s2 = get_strpath(other);
+
     p1 = RSTRING_PTR(s1);
     p2 = RSTRING_PTR(s2);
     e1 = p1 + RSTRING_LEN(s1);
@@ -68,15 +37,6 @@ Init_pathname(void)
     rb_ext_ractor_safe(true);
 #endif
 
-    InitVM(pathname);
-
-    rb_cPathname = rb_define_class("Pathname", rb_cObject);
-    rb_define_method(rb_cPathname, "<=>", path_cmp, 1);
-}
-
-void
-InitVM_pathname(void)
-{
-#undef rb_intern
-    id_at_path = rb_intern("@path");
+    VALUE rb_cPathname = rb_const_get(rb_cObject, rb_intern("Pathname"));
+    rb_define_private_method(rb_cPathname, "fast_path_cmp", fast_path_cmp, 2);
 }

@@ -10,8 +10,6 @@
 # For documentation, see class Pathname.
 #
 
-require 'pathname.so'
-
 #
 # Pathname represents the name of a file or directory on the filesystem,
 # but not the file itself.
@@ -239,11 +237,34 @@ class Pathname
   alias === ==
   alias eql? ==
 
-  unless method_defined?(:<=>)
+  protected attr_reader :path
+
+  require 'pathname.so'
+
+  if private_method_defined?(:fast_path_cmp)
+    #
+    # Provides a case-sensitive comparison operator for pathnames.
+    #
+    #	Pathname.new('/usr') <=> Pathname.new('/usr/bin')
+    #	    #=> -1
+    #	Pathname.new('/usr/bin') <=> Pathname.new('/usr/bin')
+    #	    #=> 0
+    #	Pathname.new('/usr/bin') <=> Pathname.new('/USR/BIN')
+    #	    #=> 1
+    #
+    # It will return +-1+, +0+ or +1+ depending on the value of the left argument
+    # relative to the right argument. Or it will return +nil+ if the arguments
+    # are not comparable.
+    #
+    def <=>(other)
+      return nil unless Pathname === other
+      fast_path_cmp(@path, other.path)
+    end
+  else
     # Provides for comparing pathnames, case-sensitively.
     def <=>(other)
       return nil unless Pathname === other
-      @path.tr('/', "\0") <=> other.to_s.tr('/', "\0")
+      @path.tr('/', "\0") <=> other.path.tr('/', "\0")
     end
   end
 
