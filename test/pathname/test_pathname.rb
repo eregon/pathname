@@ -601,7 +601,7 @@ class TestPathname < Test::Unit::TestCase
 
   def test_destructive_update
     path = Pathname.new("a")
-    path.to_s.replace "b"
+    assert_raise(FrozenError) { path.to_s.replace "b" }
     assert_equal(Pathname.new("a"), path)
   end
 
@@ -616,10 +616,10 @@ class TestPathname < Test::Unit::TestCase
     assert_equal(false, Pathname.new("a".freeze)            .frozen?)
     assert_equal(true,  Pathname.new("a"       ).freeze     .frozen?)
     assert_equal(true,  Pathname.new("a".freeze).freeze     .frozen?)
-    assert_equal(false, Pathname.new("a"       )       .to_s.frozen?)
-    assert_equal(false, Pathname.new("a".freeze)       .to_s.frozen?)
-    assert_equal(false, Pathname.new("a"       ).freeze.to_s.frozen?)
-    assert_equal(false, Pathname.new("a".freeze).freeze.to_s.frozen?)
+    assert_equal(true,  Pathname.new("a"       )       .to_s.frozen?)
+    assert_equal(true,  Pathname.new("a".freeze)       .to_s.frozen?)
+    assert_equal(true,  Pathname.new("a"       ).freeze.to_s.frozen?)
+    assert_equal(true,  Pathname.new("a".freeze).freeze.to_s.frozen?)
   end
 
   def test_to_s
@@ -627,7 +627,7 @@ class TestPathname < Test::Unit::TestCase
     obj = Pathname.new(str)
     assert_equal(str, obj.to_s)
     assert_not_same(str, obj.to_s)
-    assert_not_same(obj.to_s, obj.to_s)
+    assert_same(obj.to_s, obj.to_s)
   end
 
   def test_kernel_open

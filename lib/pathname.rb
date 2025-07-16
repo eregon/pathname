@@ -240,13 +240,7 @@ class Pathname
       raise ArgumentError, "pathname contains \\0: #{path.inspect}"
     end
 
-    @path = path.dup
-  end
-
-  def freeze
-    super
-    @path.freeze
-    self
+    @path = path.dup.freeze
   end
 
   #
@@ -275,7 +269,7 @@ class Pathname
 
   # Return the path as a String.
   def to_s
-    @path.dup
+    @path
   end
 
   # to_path is implemented so Pathname objects are usable with File.open, etc.
